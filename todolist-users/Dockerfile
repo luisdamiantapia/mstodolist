@@ -9,6 +9,7 @@ COPY ./todolist-users/pom.xml .
 
 RUN ./mvnw clean package -Dmaven.test.skip -Dmaven.main.skip -Dspring-boot.repackage.skip && rm -r ./target/
 #RUN ./mvnw dependency:go-offline
+
 COPY ./todolist-users/src ./src
 
 RUN ./mvnw clean package -DskipTests
