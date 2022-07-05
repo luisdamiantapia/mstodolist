@@ -1,0 +1,81 @@
+version: "3.9"
+services:
+  todolist_ms_db_users:
+    container_name: todolist_ms_db_users
+    image: mysql:8
+    ports:
+      - "3310:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: todolist_ms_users
+    volumes:
+      - todolist-data-users-mysql:/var/lib/mysql
+    restart: always
+    networks:
+      - ms-todolist
+
+  todolist_ms_db_tasks:
+    container_name: todolist_ms_db_tasks
+    image: postgres:14-alpine
+    ports:
+      - "5632:5432"
+    environment:
+      POSTGRES_PASSWORD: toor
+      POSTGRES_DB: todolist_ms_tasks
+    volumes:
+      - todolist-data-tasks-postgres:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - ms-todolist
+
+  todolist-ms-users:
+    container_name: todolist-ms-users
+    build:
+      context: ./
+      dockerfile: ./todolist-users/Dockerfile
+    ports:
+      - "8081:8081"
+    #    env_file: ./todolist-ms-users/.env
+    environment:
+      PORT: 8081
+      DB_HOST: mysql8:3306
+      DB_DATABASE: todolist_ms_users
+      DB_USERNAME: root
+      DB_PASSWORD: toor
+      TASKS_URL: todolist-ms-users:8082
+    networks:
+      - ms-todolist
+    depends_on:
+      - todolist_ms_db_users
+    restart: always
+
+  todolist-ms-tasks:
+    container_name: todolist-ms-tasks
+    build:
+      context: ./
+      dockerfile: ./todolist-tasks/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      PORT: 8002
+      DB_HOST: todolist_ms_db_tasks:5432
+      DB_DATABASE: todolist_ms_tasks
+      DB_USERNAME: postgres
+      DB_PASSWORD: toor
+      CURSOS_URL: todolist-ms-users:8081
+    networks:
+      - ms-todolist
+    depends_on:
+      - todolist_ms_db_tasks
+      - todolist-ms-users
+    restart: always
+
+volumes:
+  todolist-data-users-mysql:
+    name: todolist-data-users-mysql
+  todolist-data-tasks-postgres:
+    name: todolist-data-tasks-postgres
+
+networks:
+  ms-todolist:
+    name: ms-todolist
